@@ -1,0 +1,52 @@
+<?php
+//source: http://www.zedwood.com/article/php-curl-connect-with-ssl-client-certificate
+class SecureRequest
+{
+    private m_publicCertPath; //"/public_cert.pem"
+    private m_privateCertPath; //"/private.pem")
+    private m_caInfoPAth; //"/etc/ssl/certs/ca-certificates.crt"
+    
+    public function init($publicCertPath, $privateCertPath, $caInfoPath) {
+        $this->m_publicCertPath = $publicCertPAth;
+        $this->m_privateCertPath = $privateCertPath;
+        $this->m_caInfoPath = $caInfoPath;
+    }
+    
+    public function post($url, $data) {
+        return $this->sendRequest("POST", $url, $data);
+    }
+    
+    public function get($url, $data) {
+        $queryData = http_build_query($data);
+        $urlWithData = $url . '?' . $queryData;
+        return $this->sendRequest("GET", $urlWithData, array());
+    }
+    
+    private function sendRequest($method, $url, $data) {
+        //TODO: enforce https://-url
+        //$data = array('key'=>'value');
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_PORT , 443);
+        curl_setopt($ch, CURLOPT_VERBOSE, 0);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_SSLCERT, $this->m_publicCertPath);
+        curl_setopt($ch, CURLOPT_SSLKEY, $this->m_privateCertPath);
+        curl_setopt($ch, CURLOPT_CAINFO, $this->m_caInfoPath);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                
+        if( strtoupper($method) == "POST" )
+        {
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        }
+
+        $response = curl_exec($ch);
+        //$info =curl_errno($ch)>0 ? array("curl_error_".curl_errno($ch)=>curl_error($ch)) : curl_getinfo($ch);
+        //print_r($info);
+        curl_close($ch);
+        return $response;
+    }
+}
+?>
